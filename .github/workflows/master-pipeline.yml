@@ -150,12 +150,20 @@ jobs:
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       # --- Hadolint: every Dockerfile in the repo ------------------------------
+# --- Hadolint: every Dockerfile in the repo ------------------------------
+      # Use the official action so .hadolint.yaml at repo root is auto-discovered.
       - if: matrix.tool == 'hadolint'
-        run: |
-          docker run --rm -i hadolint/hadolint:2.12.0-alpine \
-            < phase-1-ai-testing/Dockerfile
-          docker run --rm -i hadolint/hadolint:2.12.0-alpine \
-            < phase-3-performance/Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: phase-1-ai-testing/Dockerfile
+          config: .hadolint.yaml
+          failure-threshold: error
+      - if: matrix.tool == 'hadolint'
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: phase-3-performance/Dockerfile
+          config: .hadolint.yaml
+          failure-threshold: error
 
       # --- npm audit: blocks HIGH/CRITICAL deps in every sub-package -----------
       - if: matrix.tool == 'npm-audit'

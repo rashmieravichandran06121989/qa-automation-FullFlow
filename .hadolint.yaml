@@ -1,7 +1,14 @@
 # Hadolint config — every ignore is a documented decision.
 ignored:
   # DL3018 — "Pin versions in apk add". On Alpine, package versions float
-  # rapidly with security patches; pinning them locks the image to vulnerable
+  # rapidly with security patches; pinning locks the image to vulnerable
   # versions until a human bumps each pin. We rely on Trivy image scanning
   # (master-pipeline.yml job 7) to catch CVEs on each build instead.
   - DL3018
+  # DL3002 — "Last USER should not be root". The k6 image's multi-stage
+  # rationale: stage `base` ends with `USER root` so stage `test` can
+  # COPY source files with the right ownership; the runtime ENTRYPOINT
+  # is invoked under the upstream image's k6 user. Hadolint can't see
+  # the multi-stage flow.
+  - DL3002
+failure-threshold: error
