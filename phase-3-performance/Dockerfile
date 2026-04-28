@@ -21,6 +21,10 @@ USER root
 RUN apk add --no-cache --update ca-certificates tini \
  && rm -rf /var/cache/apk/*
 
+ # Drop back to the unprivileged k6 user the upstream grafana/k6 image creates.
+USER k6
+
+
 # tini is PID 1 — forwards signals correctly so docker stop terminates k6.
 ENTRYPOINT ["/sbin/tini", "--", "k6"]
 

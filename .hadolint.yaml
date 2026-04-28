@@ -1,0 +1,7 @@
+# Hadolint config — every ignore is a documented decision.
+ignored:
+  # DL3018 — "Pin versions in apk add". On Alpine, package versions float
+  # rapidly with security patches; pinning them locks the image to vulnerable
+  # versions until a human bumps each pin. We rely on Trivy image scanning
+  # (master-pipeline.yml job 7) to catch CVEs on each build instead.
+  - DL3018
