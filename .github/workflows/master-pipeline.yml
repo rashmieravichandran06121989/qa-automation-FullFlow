@@ -147,10 +147,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: grafana/setup-k6-action@v1
         with: { k6-version: "${{ env.K6_VERSION }}" }
-      - run: k6 run tests/foundations/foundations-test.ts
+      - run: k6 run --compatibility-mode=experimental_enhanced tests/foundations/foundations-test.ts
       - run: |
           mkdir -p reports
-          k6 run --summary-export=reports/load-summary.json tests/load/load-test.ts
+          k6 run --compatibility-mode=experimental_enhanced --summary-export=reports/load-summary.json tests/load/load-test.ts
       - if: always()
         uses: actions/upload-artifact@v4
         with:
