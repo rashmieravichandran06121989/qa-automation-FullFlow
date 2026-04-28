@@ -94,7 +94,6 @@ k6 0.54's TypeScript support is opt-in. The `npm run k6` script in `phase-3-perf
 After this walkthrough, in order of decreasing usefulness for a reviewer:
 
 1. [`README.md`](README.md) — the map: stack, architecture diagram, quickstart variants.
-2. [`AUDIT-REPORT-Part1.md`](AUDIT-REPORT-Part1.md) — my own Principal-SDET audit of this repo, day-by-day rating against the 45-day plan.
-3. [`AUDIT-REPORT-Part2.md`](AUDIT-REPORT-Part2.md) — every Part-1 finding mapped to its fix.
-4. [`.github/workflows/master-pipeline.yml`](.github/workflows/master-pipeline.yml) — the source of truth for what "green" means.
-5. Whichever phase README catches your eye — each is self-contained.
+2. [`docs/adr/`](docs/adr/) — `can-i-deploy` as hard gate. The architectural opinion I'd defend hardest.
+3. [`.github/workflows/master-pipeline.yml`](.github/workflows/master-pipeline.yml) — the source of truth for what "green" means.
+4. Whichever phase README catches your eye — each is self-contained.

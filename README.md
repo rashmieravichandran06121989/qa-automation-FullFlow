@@ -184,12 +184,11 @@ The root `.gitignore` already excludes the items above, so even if a stray copy 
 
 ## Reading order for reviewers
 
-1. **`AUDIT-REPORT-Part1.md`** — my own Principal-SDET audit of this repo. Day-by-day rating against the 45-day plan, AI-smell findings with file:line citations, P0/P1/P2 gap analysis.
-2. **`AUDIT-REPORT-Part2.md`** — the refactor delivery: every Part-1 finding mapped to its fix, plus the re-score (every phase 9.0/10).
-3. **`docs/adr/`** — four architecture decision records. Read 0003 first (`can-i-deploy` as hard gate) — it's the opinion I'd defend hardest.
-4. **`phase-4-pipeline/README.md`** — how the master pipeline reasons about gates.
-5. **Whichever phase README catches your eye** — each is self-contained.
-6. **`.github/workflows/master-pipeline.yml`** — the source of truth for what "green" means.
+1. **[`WALKTHROUGH.md`](WALKTHROUGH.md)** — 10-minute guided tour: how to verify each phase locally, plus the design decisions worth calling out.
+2. **[`docs/adr/`](docs/adr/)** — architecture decision record. `can-i-deploy` as hard gate — the opinion I'd defend hardest.
+3. **[`phase-4-pipeline/README.md`](phase-4-pipeline/README.md)** — how the master pipeline reasons about gates.
+4. **Whichever phase README catches your eye** — each is self-contained.
+5. **[`.github/workflows/master-pipeline.yml`](.github/workflows/master-pipeline.yml)** — the source of truth for what "green" means.
 
 ---
 

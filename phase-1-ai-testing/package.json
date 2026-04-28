@@ -14,7 +14,7 @@
 
   "scripts": {
 "test": "npx bddgen && npx playwright test --project='bdd:chromium' --grep-invert '@flaky|@visual'",
-    "test:bdd": "npx bddgen && npx playwright test --project='bdd:chromium' --grep-invert '@flaky|@visual",
+    "test:bdd": "npx bddgen && npx playwright test --project='bdd:chromium' --grep-invert '@flaky|@visual'",
     "test:api": "npx playwright test --project=api",
     "test:graphql": "npx playwright test tests/api/graphql.api.test.ts",
     "test:a11y": "npx playwright test --grep @a11y",
