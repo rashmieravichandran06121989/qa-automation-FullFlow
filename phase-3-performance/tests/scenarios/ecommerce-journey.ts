@@ -35,9 +35,9 @@ export const options: Options = {
       executor: "ramping-vus",
       startVUs: 0,
       stages: [
-        { duration: "1m", target: 25  },
+        { duration: "1m", target: 25 },
         { duration: "3m", target: 100 },
-        { duration: "1m", target: 0   },
+        { duration: "1m", target: 0 },
       ],
       gracefulRampDown: "30s",
       tags: { scenario: "shopper" },
@@ -47,10 +47,10 @@ export const options: Options = {
   tags: env.tags,
 };
 
-const login     = flowTrend("login");
+const login = flowTrend("login");
 const inventory = flowTrend("inventory");
-const cart      = flowTrend("cart");
-const checkout  = flowTrend("checkout");
+const cart = flowTrend("cart");
+const checkout = flowTrend("checkout");
 
 export default function (): void {
   const userId = pickUserId();
@@ -74,8 +74,9 @@ export default function (): void {
     const ok = check(
       res,
       {
-        "login: status 200":           (r) => r.status === 200,
-        "login: body has user email":  (r) => typeof r.body === "string" && (r.body as string).indexOf("@") !== -1,
+        "login: status 200": (r) => r.status === 200,
+        "login: body has user email": (r) =>
+          typeof r.body === "string" && (r.body as string).indexOf("@") !== -1,
       },
       { endpoint: "login" },
     );
@@ -92,8 +93,9 @@ export default function (): void {
     const ok = check(
       res,
       {
-        "inventory: status 200":      (r) => r.status === 200,
-        "inventory: non-empty list":  (r) => typeof r.body === "string" && (r.body as string).charAt(0) === "[",
+        "inventory: status 200": (r) => r.status === 200,
+        "inventory: non-empty list": (r) =>
+          typeof r.body === "string" && (r.body as string).charAt(0) === "[",
       },
       { endpoint: "inventory" },
     );
@@ -110,8 +112,9 @@ export default function (): void {
     const ok = check(
       res,
       {
-        "cart: status 200":        (r) => r.status === 200,
-        "cart: non-empty list":    (r) => typeof r.body === "string" && (r.body as string).charAt(0) === "[",
+        "cart: status 200": (r) => r.status === 200,
+        "cart: non-empty list": (r) =>
+          typeof r.body === "string" && (r.body as string).charAt(0) === "[",
       },
       { endpoint: "cart" },
     );
@@ -130,8 +133,9 @@ export default function (): void {
     const ok = check(
       res,
       {
-        "checkout: status 201":        (r) => r.status === 201,
-        "checkout: returned order id": (r) => typeof r.body === "string" && (r.body as string).indexOf('"id"') !== -1,
+        "checkout: status 201": (r) => r.status === 201,
+        "checkout: returned order id": (r) =>
+          typeof r.body === "string" && (r.body as string).indexOf('"id"') !== -1,
       },
       { endpoint: "checkout" },
     );

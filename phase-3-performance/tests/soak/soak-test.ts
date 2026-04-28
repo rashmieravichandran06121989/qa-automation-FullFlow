@@ -25,9 +25,9 @@ export const options: Options = {
       executor: "ramping-vus",
       startVUs: 0,
       stages: [
-        { duration: "2m",  target: 30 },
+        { duration: "2m", target: 30 },
         { duration: "26m", target: 30 },
-        { duration: "2m",  target: 0 },
+        { duration: "2m", target: 0 },
       ],
       gracefulRampDown: "1m",
       tags: { scenario: "endurance" },
@@ -56,7 +56,9 @@ export function setup(): { startedAt: number } {
 
 export function teardown(ctx: { startedAt: number }): void {
   const mins = (Date.now() - ctx.startedAt) / 60000;
-  console.log(`[soak] complete — ran ${mins.toFixed(1)}m — inspect soak_response_time_ms for drift`);
+  console.log(
+    `[soak] complete — ran ${mins.toFixed(1)}m — inspect soak_response_time_ms for drift`,
+  );
 }
 
 export default function (): void {
@@ -69,9 +71,7 @@ export default function (): void {
   driftTrend.add(listRes.timings.duration);
   thinkTime(1.5, 2.5);
 
-  const userRes = api
-    .endpoint("user_detail")
-    .get(`${env.baseUrl}/users/${pickUserId()}`);
+  const userRes = api.endpoint("user_detail").get(`${env.baseUrl}/users/${pickUserId()}`);
   assertOk(userRes, "user_detail", 200, 500);
   driftTrend.add(userRes.timings.duration);
   thinkTime(0.8, 1.2);
@@ -85,9 +85,7 @@ export default function (): void {
 
   // Every 5th iter: heavier endpoint so drift shows up on slow paths too.
   if (__ITER % 5 === 0) {
-    const slowRes = api
-      .endpoint("photos_slow")
-      .get(`${env.baseUrl}/photos?_limit=10`);
+    const slowRes = api.endpoint("photos_slow").get(`${env.baseUrl}/photos?_limit=10`);
     assertOk(slowRes, "photos_slow", 200, 800);
     driftTrend.add(slowRes.timings.duration);
   }

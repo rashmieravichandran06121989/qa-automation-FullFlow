@@ -127,7 +127,7 @@ jobs:
 
       # --- Trivy filesystem scan (catches deps + IaC + Dockerfile config) ------
       - if: matrix.tool == 'trivy-fs'
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
           scan-ref: .
@@ -438,7 +438,7 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.image.name }}
           cache-to:   type=gha,scope=${{ matrix.image.name }},mode=max
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ matrix.image.name }}:${{ github.sha }}
           severity: HIGH,CRITICAL

@@ -33,12 +33,12 @@ metadata:
     test: stress-distributed
 spec:
   parallelism: 4
-  separate: true   # distinct pods, not a single pod with N processes
-  cleanup:    post  # delete runners after the test finishes
+  separate: true # distinct pods, not a single pod with N processes
+  cleanup: post # delete runners after the test finishes
   script:
     configMap:
       name: stress-script
-      file: stress-test.js   # built from tests/stress/stress-test.ts via esbuild
+      file: stress-test.js # built from tests/stress/stress-test.ts via esbuild
   arguments: >-
     --out influxdb=http://influxdb.observability.svc.cluster.local:8086/k6
     --tag run_id=$(uuidgen)
@@ -46,18 +46,18 @@ spec:
   runner:
     image: grafana/k6:0.54.0
     resources:
-      requests: { cpu: 500m,  memory: 256Mi }
-      limits:   { cpu: 1000m, memory: 512Mi }
+      requests: { cpu: 500m, memory: 256Mi }
+      limits: { cpu: 1000m, memory: 512Mi }
     env:
-      - name:  K6_ENV
+      - name: K6_ENV
         value: staging
-      - name:  STAGING_BASE_URL
+      - name: STAGING_BASE_URL
         valueFrom:
           configMapKeyRef: { name: k6-env, key: STAGING_BASE_URL }
-      - name:  K6_INFLUXDB_USERNAME
+      - name: K6_INFLUXDB_USERNAME
         valueFrom:
           secretKeyRef: { name: influx-creds, key: writer-user }
-      - name:  K6_INFLUXDB_PASSWORD
+      - name: K6_INFLUXDB_PASSWORD
         valueFrom:
           secretKeyRef: { name: influx-creds, key: writer-pass }
 ---

@@ -18,13 +18,13 @@ interface PostSeed {
 
 const SEEDS: ReadonlyArray<PostSeed> = [
   { title: "checkout regression sweep", body: "order placed, awaiting fulfilment" },
-  { title: "inventory sync audit",      body: "reconciling warehouse counts against WMS" },
-  { title: "auth flow smoke",           body: "SSO + MFA happy path" },
-  { title: "cart pricing recalc",       body: "tax engine round-trip" },
-  { title: "user preferences update",   body: "timezone + locale" },
-  { title: "webhook retry",             body: "idempotency key present" },
-  { title: "search query",              body: "q=shoes&size=42&color=black" },
-  { title: "shipping estimate",         body: "origin NL, destination DE" },
+  { title: "inventory sync audit", body: "reconciling warehouse counts against WMS" },
+  { title: "auth flow smoke", body: "SSO + MFA happy path" },
+  { title: "cart pricing recalc", body: "tax engine round-trip" },
+  { title: "user preferences update", body: "timezone + locale" },
+  { title: "webhook retry", body: "idempotency key present" },
+  { title: "search query", body: "q=shoes&size=42&color=black" },
+  { title: "shipping estimate", body: "origin NL, destination DE" },
 ];
 
 export const POST_POOL = new SharedArray<PostSeed>("post_seed_pool", () => {

@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
-import { z } from "zod";
+import { test, expect } from '@playwright/test';
+import { z } from 'zod';
 
 /**
  * GraphQL surface — closes the Days 13-14 plan deliverable
@@ -15,25 +15,23 @@ import { z } from "zod";
  * vs HTTP 4xx on a transport failure). Conflating them muddies the diagnosis.
  */
 
-const GRAPHQL_URL = "https://countries.trevorblades.com/";
+const GRAPHQL_URL = 'https://countries.trevorblades.com/';
 
 // --- Schemas (also published by upstream introspection — in production we'd
 // generate these via codegen; hand-written here keeps the demo dependency-light)
 const CountrySchema = z.object({
-  code:    z.string().length(2),
-  name:    z.string().min(1),
+  code: z.string().length(2),
+  name: z.string().min(1),
   capital: z.string().nullable(),
-  emoji:   z.string().min(1),
+  emoji: z.string().min(1),
 });
 const CountryQueryResponse = z.object({
   data: z.object({ country: CountrySchema.nullable() }),
-  errors: z
-    .array(z.object({ message: z.string() }))
-    .optional(),
+  errors: z.array(z.object({ message: z.string() })).optional(),
 });
 
-test.describe("GraphQL — countries.trevorblades.com", () => {
-  test("query Country(NL) returns the expected country shape", async ({
+test.describe('GraphQL — countries.trevorblades.com', () => {
+  test('query Country(NL) returns the expected country shape', async ({
     request,
   }) => {
     const res = await request.post(GRAPHQL_URL, {
@@ -48,7 +46,7 @@ test.describe("GraphQL — countries.trevorblades.com", () => {
             }
           }
         `,
-        variables: { code: "NL" },
+        variables: { code: 'NL' },
       },
     });
     expect(res.status()).toBe(200);
@@ -57,13 +55,13 @@ test.describe("GraphQL — countries.trevorblades.com", () => {
     const parsed = CountryQueryResponse.parse(await res.json());
     expect(parsed.errors).toBeUndefined();
     expect(parsed.data.country).toMatchObject({
-      code:    "NL",
-      name:    "Netherlands",
-      capital: "Amsterdam",
+      code: 'NL',
+      name: 'Netherlands',
+      capital: 'Amsterdam',
     });
   });
 
-  test("query Country(ZZ) returns null in `data.country` (not an HTTP error)", async ({
+  test('query Country(ZZ) returns null in `data.country` (not an HTTP error)', async ({
     request,
   }) => {
     const res = await request.post(GRAPHQL_URL, {
@@ -76,9 +74,9 @@ test.describe("GraphQL — countries.trevorblades.com", () => {
     expect(parsed.data.country).toBeNull();
   });
 
-  test("malformed query returns errors[]", async ({ request }) => {
+  test('malformed query returns errors[]', async ({ request }) => {
     const res = await request.post(GRAPHQL_URL, {
-      data: { query: "query { country(code: NL) { codeButMisspelt } }" },
+      data: { query: 'query { country(code: NL) { codeButMisspelt } }' },
     });
     // GraphQL convention: validation errors return 400. trevorblades returns
     // 400 with errors[] populated.

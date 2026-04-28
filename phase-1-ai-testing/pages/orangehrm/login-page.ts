@@ -22,7 +22,9 @@ export class OrangeLoginPage extends BasePage {
     // Match either, plus the ARIA fallback. `.first()` so .textContent
     // returns a single string, not a list.
     this.errorAlert = page
-      .locator('.oxd-alert-content-text, .oxd-alert--error .oxd-text, [role="alert"]')
+      .locator(
+        '.oxd-alert-content-text, .oxd-alert--error .oxd-text, [role="alert"]',
+      )
       .first();
     this.requiredFieldError = page.locator('.oxd-input-field-error-message');
   }
@@ -52,7 +54,7 @@ export class OrangeLoginPage extends BasePage {
     await this.loginButton.click();
   }
 
-async getErrorMessage(): Promise<string> {
+  async getErrorMessage(): Promise<string> {
     // OrangeHRM POSTs Login → /auth/validate → redirect back to /auth/login.
     // The error toast renders only after that round-trip. Without a
     // networkidle wait, the 10-s element timeout was being eaten by the

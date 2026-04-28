@@ -26,25 +26,25 @@
  * expected to populate that file from the previous green main run via
  * `actions/download-artifact`.
  */
-'use strict';
+"use strict";
 
-const fs   = require('node:fs');
-const path = require('node:path');
+const fs = require("node:fs");
+const path = require("node:path");
 
-const TOLERANCE_PCT = Number(process.env.PERF_TOLERANCE_PCT ?? '15'); // 15 % default
-const STRICT        = process.env.STRICT === '1';
+const TOLERANCE_PCT = Number(process.env.PERF_TOLERANCE_PCT ?? "15"); // 15 % default
+const STRICT = process.env.STRICT === "1";
 
 // Metrics we gate on. Anything else in the summary is informational.
 const GATED_METRICS = [
-  { metric: 'http_req_duration', stat: 'p(95)' },
-  { metric: 'http_req_duration', stat: 'p(99)' },
-  { metric: 'http_req_failed',   stat: 'rate'  },
+  { metric: "http_req_duration", stat: "p(95)" },
+  { metric: "http_req_duration", stat: "p(99)" },
+  { metric: "http_req_failed", stat: "rate" },
 ];
 
 function load(file) {
   if (!fs.existsSync(file)) return null;
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
+    return JSON.parse(fs.readFileSync(file, "utf8"));
   } catch (e) {
     fail(`Could not parse ${file}: ${e.message}`);
   }
@@ -56,7 +56,7 @@ function pluck(summary, metric, stat) {
 }
 
 function fmt(v) {
-  return typeof v === 'number' ? v.toFixed(2) : String(v);
+  return typeof v === "number" ? v.toFixed(2) : String(v);
 }
 
 function fail(msg) {
@@ -76,11 +76,11 @@ function note(msg) {
 function main() {
   const [currentArg, baselineArg] = process.argv.slice(2);
   if (!currentArg) {
-    fail('Usage: perf-regression.js <current-summary.json> [<baseline-summary.json>]');
+    fail("Usage: perf-regression.js <current-summary.json> [<baseline-summary.json>]");
   }
 
-  const baselinePath = baselineArg ?? path.join(path.dirname(currentArg), 'baseline-summary.json');
-  const current  = load(currentArg);
+  const baselinePath = baselineArg ?? path.join(path.dirname(currentArg), "baseline-summary.json");
+  const current = load(currentArg);
   const baseline = load(baselinePath);
 
   if (!current) fail(`Current summary not found at ${currentArg}`);
@@ -94,10 +94,10 @@ function main() {
 
   let regressions = 0;
   note(`Regression check (tolerance: ${TOLERANCE_PCT}%, strict: ${STRICT})`);
-  note('───────────────────────────────────────────────');
+  note("───────────────────────────────────────────────");
 
   for (const { metric, stat } of GATED_METRICS) {
-    const cur = pluck(current,  metric, stat);
+    const cur = pluck(current, metric, stat);
     const old = pluck(baseline, metric, stat);
     if (cur === undefined || old === undefined) {
       warn(`${metric} ${stat}: missing in one of the two summaries — skipped`);
@@ -108,20 +108,20 @@ function main() {
       continue;
     }
     const deltaPct = ((cur - old) / old) * 100;
-    const verdict = deltaPct > TOLERANCE_PCT ? 'REGRESSION' :
-                    deltaPct < -TOLERANCE_PCT ? 'IMPROVED'  : 'within';
-    const arrow   = deltaPct >= 0 ? '↑' : '↓';
+    const verdict =
+      deltaPct > TOLERANCE_PCT ? "REGRESSION" : deltaPct < -TOLERANCE_PCT ? "IMPROVED" : "within";
+    const arrow = deltaPct >= 0 ? "↑" : "↓";
     note(
       `${metric} ${stat}: ${fmt(old)} → ${fmt(cur)} (${arrow} ${deltaPct.toFixed(1)}%) — ${verdict}`,
     );
-    if (verdict === 'REGRESSION') regressions++;
+    if (verdict === "REGRESSION") regressions++;
   }
 
-  note('───────────────────────────────────────────────');
+  note("───────────────────────────────────────────────");
   if (regressions > 0) {
     fail(`${regressions} metric(s) regressed beyond the ${TOLERANCE_PCT}% tolerance.`);
   }
-  note('No regressions detected.');
+  note("No regressions detected.");
   process.exit(0);
 }
 

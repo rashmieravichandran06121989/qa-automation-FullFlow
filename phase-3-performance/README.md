@@ -67,35 +67,45 @@ npm install
 All tests obey the active environment profile. Default is `sandbox`.
 
 ### Foundations — smoke baseline
+
 ```bash
 k6 run tests/foundations/foundations-test.ts
 ```
+
 10 VUs, 30s. Run this first after cloning to verify install and baseline response times.
 
 ![foundations run](docs/foundations-run.png)
 
 ### Load — steady production hour
+
 ```bash
 k6 run tests/load/load-test.ts
 ```
+
 Ramps to 20, holds at 50 for 3m, ramps down. Named scenario `steady_hour` with `gracefulRampDown`.
 
 ### Stress — find the breaking point
+
 ```bash
 k6 run tests/stress/stress-test.ts
 ```
+
 `ramping-arrival-rate` from 20 → 200 req/s with `preAllocatedVUs: 50 / maxVUs: 400`. Retries are **disabled** in this test so we don't mask server-side degradation.
 
 ### Soak — 30-min endurance
+
 ```bash
 k6 run tests/soak/soak-test.ts
 ```
+
 30 VUs for 30 min. Each request is tagged with its elapsed-minute bucket (`elapsed=0-5m`, `5-10m`, …) so latency drift is visible per-bucket in Grafana. If `soak_response_time_ms` p(95) climbs after 15m, there's a connection or resource leak.
 
 ### Scenario — e-commerce shopper journey
+
 ```bash
 k6 run tests/scenarios/ecommerce-journey.ts
 ```
+
 100 concurrent shoppers walk `login → inventory → cart → checkout`, each step hitting a real jsonplaceholder endpoint (`/users/{id}`, `/users/{id}/posts`, `/users/{id}/todos`, `POST /posts`). Per-flow Trends, per-endpoint SLA, content-presence checks on every response, business-error counter on checkout failures.
 
 > The earlier file was `sauce-demo.ts` targeting www.saucedemo.com. That site is a React SPA — `/inventory.html` and `/cart.html` are client-side routes that 404 at the origin — so the test exercised nothing real. `sauce-demo.ts` now re-exports `ecommerce-journey.ts` for backward compatibility.
@@ -159,13 +169,13 @@ ls reports/
 
 Defined per-profile in `config/thresholds.ts`:
 
-| Profile | p95 | p99 | Error rate | Checks |
-|---|---|---|---|---|
-| `foundation` | < 500ms | — | < 1% | ≥ 95% |
-| `steady_load` | < 500ms | < 800ms | < 1% (`abortOnFail` after 30s) | ≥ 95% |
-| `stress_breaking_point` | < 1000ms | — | < 5% | ≥ 90% |
-| `soak_endurance` | < 500ms | < 800ms | < 0.5% (`abortOnFail` after 5m) | ≥ 95% |
-| `user_journey` | < 500ms | — | < 1% | ≥ 95% |
+| Profile                 | p95      | p99     | Error rate                      | Checks |
+| ----------------------- | -------- | ------- | ------------------------------- | ------ |
+| `foundation`            | < 500ms  | —       | < 1%                            | ≥ 95%  |
+| `steady_load`           | < 500ms  | < 800ms | < 1% (`abortOnFail` after 30s)  | ≥ 95%  |
+| `stress_breaking_point` | < 1000ms | —       | < 5%                            | ≥ 90%  |
+| `soak_endurance`        | < 500ms  | < 800ms | < 0.5% (`abortOnFail` after 5m) | ≥ 95%  |
+| `user_journey`          | < 500ms  | —       | < 1%                            | ≥ 95%  |
 
 Per-endpoint SLAs layer on top (Sauce Demo journey: login < 300ms, inventory < 400ms, cart < 300ms, checkout < 300ms).
 

@@ -16,18 +16,18 @@
 import { Counter, Rate, Trend } from "k6/metrics";
 
 export interface TelemetryBundle {
-  readonly latency: Trend;          // per-request latency, tagged by endpoint
+  readonly latency: Trend; // per-request latency, tagged by endpoint
   readonly businessErrors: Counter; // non-HTTP failures (schema, auth, missing field)
-  readonly retries: Counter;        // retry attempts triggered
-  readonly successRate: Rate;       // 1 for success iteration, 0 otherwise
+  readonly retries: Counter; // retry attempts triggered
+  readonly successRate: Rate; // 1 for success iteration, 0 otherwise
 }
 
 // Must be module-top-level so k6 allocates these in the init context.
 const BUNDLE: TelemetryBundle = {
-  latency:        new Trend("perf_latency_ms", true),
+  latency: new Trend("perf_latency_ms", true),
   businessErrors: new Counter("perf_business_errors"),
-  retries:        new Counter("perf_retry_attempts"),
-  successRate:    new Rate("perf_iteration_success"),
+  retries: new Counter("perf_retry_attempts"),
+  successRate: new Rate("perf_iteration_success"),
 };
 
 export function telemetry(): TelemetryBundle {

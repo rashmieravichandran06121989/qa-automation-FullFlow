@@ -14,7 +14,7 @@ name: Master Pipeline
 on:
   push:
     branches: [main]
-    tags:    ['v*.*.*']
+    tags: ["v*.*.*"]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -36,10 +36,10 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents:        read
-  issues:          write
+  contents: read
+  issues: write
   security-events: write
-  packages:        write    # for the release stage when publishing the image
+  packages: write # for the release stage when publishing the image
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -77,8 +77,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents:  read
-      packages:  write
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -108,9 +108,9 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/k6-suite:${{ steps.ver.outputs.tag }}
             ghcr.io/${{ github.repository_owner }}/k6-suite:latest
           cache-from: type=gha
-          cache-to:   type=gha,mode=max
-          provenance: true              # SLSA provenance attestation
-          sbom:       true              # SPDX SBOM attestation
+          cache-to: type=gha,mode=max
+          provenance: true # SLSA provenance attestation
+          sbom: true # SPDX SBOM attestation
 
   # ---------------------------------------------------------------------------
   # 4. Final summary — single status check the branch protection points at

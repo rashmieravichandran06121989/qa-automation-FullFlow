@@ -1,7 +1,7 @@
-import { chromium, type FullConfig } from "@playwright/test";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { credentials } from "../config/credentials";
+import { chromium, type FullConfig } from '@playwright/test';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { credentials } from '../config/credentials';
 
 /**
  * globalSetup — caches a real OrangeHRM session into .auth/orangehrm.json so
@@ -24,15 +24,14 @@ import { credentials } from "../config/credentials";
  * flakes.
  */
 
-export const ORANGE_STORAGE_STATE = resolve(".auth/orangehrm.json");
+export const ORANGE_STORAGE_STATE = resolve('.auth/orangehrm.json');
 
 const ORANGEHRM_BASE_URL =
-  process.env.ORANGEHRM_BASE_URL ??
-  "https://opensource-demo.orangehrmlive.com";
+  process.env.ORANGEHRM_BASE_URL ?? 'https://opensource-demo.orangehrmlive.com';
 
 const EMPTY_STATE = JSON.stringify({ cookies: [], origins: [] });
 const FAIL_LOUD =
-  process.env.CI === "true" || process.env.REQUIRE_ORANGEHRM_AUTH === "1";
+  process.env.CI === 'true' || process.env.REQUIRE_ORANGEHRM_AUTH === '1';
 const MAX_ATTEMPTS = 3;
 
 export default async function globalSetup(_: FullConfig): Promise<void> {
@@ -85,14 +84,14 @@ async function login(): Promise<void> {
       timeout: 30_000,
     });
     await page
-      .getByPlaceholder("Username")
+      .getByPlaceholder('Username')
       .fill(credentials.orangeHRM.admin.username);
     await page
-      .getByPlaceholder("Password")
+      .getByPlaceholder('Password')
       .fill(credentials.orangeHRM.admin.password);
-    await page.getByRole("button", { name: "Login" }).click();
+    await page.getByRole('button', { name: 'Login' }).click();
     await page
-      .getByRole("heading", { name: "Dashboard" })
+      .getByRole('heading', { name: 'Dashboard' })
       .waitFor({ timeout: 30_000 });
     await context.storageState({ path: ORANGE_STORAGE_STATE });
   } finally {
@@ -105,5 +104,7 @@ function delay(ms: number): Promise<void> {
 }
 
 function oneLine(e: unknown): string {
-  return ((e as Error)?.message ?? String(e)).replace(/\s+/g, " ").slice(0, 200);
+  return ((e as Error)?.message ?? String(e))
+    .replace(/\s+/g, ' ')
+    .slice(0, 200);
 }

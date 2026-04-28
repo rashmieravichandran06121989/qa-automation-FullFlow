@@ -22,18 +22,18 @@ on noise, looser and we miss real regressions.
 
 ## Sandbox baseline (2026-04-26)
 
-| Metric                          | Observed p95 | + 30% | Threshold |
-|---------------------------------|--------------|-------|-----------|
-| `http_req_duration` (foundation)| 372 ms       | 484 ms| **500 ms**|
-| `http_req_duration` (load)      | 388 ms       | 504 ms| **500 ms**|
-| `http_req_duration` (stress)    | 760 ms       | 988 ms| **1000 ms**|
-| `http_req_duration` (soak)      | 380 ms       | 494 ms| **500 ms**|
-| `byEndpoint(login)`             | 295 ms       | 384 ms| **400 ms**|
-| `byEndpoint(inventory)`         | 460 ms       | 598 ms| **600 ms**|
-| `byEndpoint(cart)`              | 455 ms       | 591 ms| **600 ms**|
-| `byEndpoint(checkout)`          | 380 ms       | 494 ms| **500 ms**|
-| `http_req_failed` (foundation)  | 0.0021       | -     | **0.01** |
-| `http_req_failed` (soak)        | 0.0014       | -     | **0.005**|
+| Metric                           | Observed p95 | + 30%  | Threshold   |
+| -------------------------------- | ------------ | ------ | ----------- |
+| `http_req_duration` (foundation) | 372 ms       | 484 ms | **500 ms**  |
+| `http_req_duration` (load)       | 388 ms       | 504 ms | **500 ms**  |
+| `http_req_duration` (stress)     | 760 ms       | 988 ms | **1000 ms** |
+| `http_req_duration` (soak)       | 380 ms       | 494 ms | **500 ms**  |
+| `byEndpoint(login)`              | 295 ms       | 384 ms | **400 ms**  |
+| `byEndpoint(inventory)`          | 460 ms       | 598 ms | **600 ms**  |
+| `byEndpoint(cart)`               | 455 ms       | 591 ms | **600 ms**  |
+| `byEndpoint(checkout)`           | 380 ms       | 494 ms | **500 ms**  |
+| `http_req_failed` (foundation)   | 0.0021       | -      | **0.01**    |
+| `http_req_failed` (soak)         | 0.0014       | -      | **0.005**   |
 
 Error-rate budgets are NOT scaled with headroom — they're absolute SLO
 commitments.

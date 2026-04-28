@@ -82,9 +82,7 @@ export function getEnv(): EnvConfig {
   const env = REGISTRY[raw];
 
   if (!env) {
-    throw new Error(
-      `Unknown environment "${raw}". Valid: ${Object.keys(REGISTRY).join(", ")}`,
-    );
+    throw new Error(`Unknown environment "${raw}". Valid: ${Object.keys(REGISTRY).join(", ")}`);
   }
   if (env.name === "prod" && !env.baseUrl) {
     throw new Error("PROD_BASE_URL must be set before running against prod.");

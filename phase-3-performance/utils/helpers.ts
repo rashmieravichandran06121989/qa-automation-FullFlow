@@ -37,8 +37,7 @@ export function assertOk(
     res,
     {
       [`${label}: status ${expectedStatus}`]: (r) => r.status === expectedStatus,
-      [`${label}: latency < ${latencyBudgetMs}ms`]: (r) =>
-        r.timings.duration < latencyBudgetMs,
+      [`${label}: latency < ${latencyBudgetMs}ms`]: (r) => r.timings.duration < latencyBudgetMs,
       [`${label}: body non-empty`]: (r) => typeof r.body === "string" && r.body.length > 0,
     },
     { endpoint: label },

@@ -17,9 +17,9 @@ export class OrangeDashboardPage extends BasePage {
     this.logoutLink = page.getByRole('menuitem', { name: 'Logout' });
   }
 
-async expectLoaded(): Promise<void> {
-  await expect(this.header).toBeVisible({ timeout: 20_000 });
-}
+  async expectLoaded(): Promise<void> {
+    await expect(this.header).toBeVisible({ timeout: 20_000 });
+  }
 
   /**
    * Non-throwing variant — returns true when the dashboard heading is

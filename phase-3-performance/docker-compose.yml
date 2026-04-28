@@ -13,7 +13,7 @@ services:
     container_name: k6-influxdb
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8086:8086"   # bind loopback — no external exposure
+      - "127.0.0.1:8086:8086" # bind loopback — no external exposure
     environment:
       INFLUXDB_DB: k6
       INFLUXDB_HTTP_AUTH_ENABLED: "true"
@@ -54,7 +54,8 @@ services:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health | grep -q '\"database\": \"ok\"'"]
+      test:
+        ["CMD-SHELL", 'wget -qO- http://localhost:3000/api/health | grep -q ''"database": "ok"''']
       interval: 15s
       timeout: 5s
       retries: 5

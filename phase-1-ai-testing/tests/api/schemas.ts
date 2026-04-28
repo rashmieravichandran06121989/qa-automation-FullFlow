@@ -10,15 +10,15 @@
  * Closes the audit gap "schema validation (Zod/Ajv) — Days 11-12 missing".
  */
 
-import { z } from "zod";
+import { z } from 'zod';
 
 // ---- Posts ----------------------------------------------------------------
 
 export const PostSchema = z.object({
   userId: z.number().int().positive(),
-  id:     z.number().int().positive(),
-  title:  z.string().min(1),
-  body:   z.string().min(1),
+  id: z.number().int().positive(),
+  title: z.string().min(1),
+  body: z.string().min(1),
 });
 export type Post = z.infer<typeof PostSchema>;
 
@@ -30,9 +30,9 @@ export type PostInput = z.infer<typeof PostInputSchema>;
 // ---- Users ----------------------------------------------------------------
 
 const UserAddressSchema = z.object({
-  street:  z.string(),
-  suite:   z.string(),
-  city:    z.string(),
+  street: z.string(),
+  suite: z.string(),
+  city: z.string(),
   zipcode: z.string(),
   geo: z.object({
     lat: z.string(),
@@ -41,13 +41,13 @@ const UserAddressSchema = z.object({
 });
 
 export const UserSchema = z.object({
-  id:       z.number().int().positive(),
-  name:     z.string().min(1),
+  id: z.number().int().positive(),
+  name: z.string().min(1),
   username: z.string().min(1),
-  email:    z.string().email(),
-  phone:    z.string(),
-  website:  z.string(),
-  address:  UserAddressSchema,
+  email: z.string().email(),
+  phone: z.string(),
+  website: z.string(),
+  address: UserAddressSchema,
 });
 export type User = z.infer<typeof UserSchema>;
 

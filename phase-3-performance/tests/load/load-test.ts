@@ -44,9 +44,7 @@ export default function (): void {
   assertOk(listRes, "users_list", 200, 500);
   thinkTime(0.5, 1.5);
 
-  const userRes = api
-    .endpoint("user_detail")
-    .get(`${env.baseUrl}/users/${pickUserId()}`);
+  const userRes = api.endpoint("user_detail").get(`${env.baseUrl}/users/${pickUserId()}`);
   assertOk(userRes, "user_detail", 200, 500);
   thinkTime(0.5, 1.5);
 

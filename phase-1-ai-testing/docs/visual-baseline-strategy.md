@@ -5,12 +5,12 @@ Eyes, hard to govern it across a team. This document is the team contract.
 
 ## Branching model
 
-| Branch type           | `APPLITOOLS_BRANCH`         | `APPLITOOLS_PARENT_BRANCH` | Behaviour |
-|-----------------------|-----------------------------|----------------------------|-----------|
-| `main`                | `main`                      | `main`                     | New baselines auto-saved. This is the source of truth. |
-| Feature branch (PR)   | `<head_ref>` (e.g. `feat/x`) | `main`                     | Diffs against `main`. New differences require human review in the Applitools dashboard before the PR can merge. |
-| Hotfix off `main`     | `<head_ref>`                | `main`                     | Same as feature. |
-| Release branch        | `release/<version>`         | `main`                     | Branch baseline forks; subsequent patches in that release line diff against the release baseline, not `main`. |
+| Branch type         | `APPLITOOLS_BRANCH`          | `APPLITOOLS_PARENT_BRANCH` | Behaviour                                                                                                       |
+| ------------------- | ---------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `main`              | `main`                       | `main`                     | New baselines auto-saved. This is the source of truth.                                                          |
+| Feature branch (PR) | `<head_ref>` (e.g. `feat/x`) | `main`                     | Diffs against `main`. New differences require human review in the Applitools dashboard before the PR can merge. |
+| Hotfix off `main`   | `<head_ref>`                 | `main`                     | Same as feature.                                                                                                |
+| Release branch      | `release/<version>`          | `main`                     | Branch baseline forks; subsequent patches in that release line diff against the release baseline, not `main`.   |
 
 The master pipeline injects these env vars (see
 `.github/workflows/master-pipeline.yml`, the `ai-testing` job). No test code
@@ -30,7 +30,7 @@ When Applitools surfaces a diff:
    Applitools "unresolved diffs" status check feeding GitHub's required-checks
    list — see Applitools admin → Apps & Integrations → GitHub.
 
-## What we explicitly do *not* do
+## What we explicitly do _not_ do
 
 - **Auto-accept diffs in CI.** Defeats the point of visual testing.
 - **Branch-baseline new features.** The PR author should diff against

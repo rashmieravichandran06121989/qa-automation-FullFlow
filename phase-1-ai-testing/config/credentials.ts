@@ -18,9 +18,9 @@
  */
 
 const allowDemoDefaults =
-  process.env.ALLOW_DEMO_DEFAULTS === "1" ||
+  process.env.ALLOW_DEMO_DEFAULTS === '1' ||
   // Sandbox is the only env where demo creds are safe.
-  (process.env.K6_ENV ?? "sandbox") === "sandbox";
+  (process.env.K6_ENV ?? 'sandbox') === 'sandbox';
 
 function required(envKey: string, demoFallback: string): string {
   const v = process.env[envKey];
@@ -38,19 +38,19 @@ export const credentials = {
     // SauceDemo's test users are baked into the demo site and listed on its
     // login page — they're part of the public contract, not secrets.
     users: {
-      standard:           "standard_user",
-      lockedOut:          "locked_out_user",
-      problem:            "problem_user",
-      performanceGlitch:  "performance_glitch_user",
-      error:              "error_user",
-      visual:             "visual_user",
+      standard: 'standard_user',
+      lockedOut: 'locked_out_user',
+      problem: 'problem_user',
+      performanceGlitch: 'performance_glitch_user',
+      error: 'error_user',
+      visual: 'visual_user',
     },
-    password: required("SAUCEDEMO_PASSWORD", "secret_sauce"),
+    password: required('SAUCEDEMO_PASSWORD', 'secret_sauce'),
   },
   orangeHRM: {
     admin: {
-      username: required("ORANGEHRM_ADMIN_USER",     "Admin"),
-      password: required("ORANGEHRM_ADMIN_PASSWORD", "admin123"),
+      username: required('ORANGEHRM_ADMIN_USER', 'Admin'),
+      password: required('ORANGEHRM_ADMIN_PASSWORD', 'admin123'),
     },
   },
 } as const;

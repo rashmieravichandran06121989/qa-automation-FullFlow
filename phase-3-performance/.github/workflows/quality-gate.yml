@@ -36,7 +36,7 @@ permissions:
 
 env:
   NODE_VERSION: "20"
-  K6_VERSION:   "0.54.0"
+  K6_VERSION: "0.54.0"
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -171,7 +171,7 @@ jobs:
             gate: true
           - suite: stress
             script: tests/stress/stress-test.ts
-            gate: false       # informational only — does not block
+            gate: false # informational only — does not block
     steps:
       - uses: actions/checkout@v4
       - name: Install k6 (pinned)
@@ -214,7 +214,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      security-events: write    # for SARIF upload to Code Scanning
+      security-events: write # for SARIF upload to Code Scanning
     steps:
       - uses: actions/checkout@v4
       - name: Trivy filesystem scan (vuln + secret + misconfig)
@@ -225,7 +225,7 @@ jobs:
           severity: HIGH,CRITICAL
           format: sarif
           output: trivy-results.sarif
-          exit-code: "0"        # don't fail the gate on scan warnings — reviewed via SARIF
+          exit-code: "0" # don't fail the gate on scan warnings — reviewed via SARIF
       - name: Upload Trivy SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v3
@@ -234,7 +234,7 @@ jobs:
       - name: Gitleaks secret scan
         uses: gitleaks/gitleaks-action@v2
         env:
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}    # optional in OSS
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # optional in OSS
 
   # ---------------------------------------------------------------------------
   # 7. summary  — single status check

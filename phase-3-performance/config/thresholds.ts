@@ -44,8 +44,8 @@ function byEndpoint(tag: string): string {
 const BASE_REGISTRY: Readonly<Record<ThresholdProfile, ThresholdMap>> = {
   foundation: {
     http_req_duration: [{ threshold: "p(95)<500", abortOnFail: false }],
-    http_req_failed:   [{ threshold: "rate<0.01", abortOnFail: false }],
-    checks:            ["rate>=0.95"],
+    http_req_failed: [{ threshold: "rate<0.01", abortOnFail: false }],
+    checks: ["rate>=0.95"],
   },
 
   steady_load: {
@@ -53,16 +53,14 @@ const BASE_REGISTRY: Readonly<Record<ThresholdProfile, ThresholdMap>> = {
       { threshold: "p(95)<500", abortOnFail: false },
       { threshold: "p(99)<800", abortOnFail: false },
     ],
-    http_req_failed: [
-      { threshold: "rate<0.01", abortOnFail: true, delayAbortEval: "30s" },
-    ],
+    http_req_failed: [{ threshold: "rate<0.01", abortOnFail: true, delayAbortEval: "30s" }],
     checks: ["rate>=0.95"],
   },
 
   stress_breaking_point: {
     http_req_duration: ["p(95)<1000"],
-    http_req_failed:   ["rate<0.05"],
-    checks:            ["rate>=0.90"],
+    http_req_failed: ["rate<0.05"],
+    checks: ["rate>=0.90"],
     dropped_iterations: ["count<100"],
   },
 
@@ -71,20 +69,18 @@ const BASE_REGISTRY: Readonly<Record<ThresholdProfile, ThresholdMap>> = {
       { threshold: "p(95)<500", abortOnFail: false },
       { threshold: "p(99)<800", abortOnFail: false },
     ],
-    http_req_failed: [
-      { threshold: "rate<0.005", abortOnFail: true, delayAbortEval: "5m" },
-    ],
+    http_req_failed: [{ threshold: "rate<0.005", abortOnFail: true, delayAbortEval: "5m" }],
     checks: ["rate>=0.95"],
   },
 
   user_journey: {
     http_req_duration: ["p(95)<800"],
-    http_req_failed:   ["rate<0.01"],
-    checks:            ["rate>=0.95"],
-    [byEndpoint("login")]:     ["p(95)<400"],
+    http_req_failed: ["rate<0.01"],
+    checks: ["rate>=0.95"],
+    [byEndpoint("login")]: ["p(95)<400"],
     [byEndpoint("inventory")]: ["p(95)<600"],
-    [byEndpoint("cart")]:      ["p(95)<600"],
-    [byEndpoint("checkout")]:  ["p(95)<500"],
+    [byEndpoint("cart")]: ["p(95)<600"],
+    [byEndpoint("checkout")]: ["p(95)<500"],
   },
 };
 
@@ -99,23 +95,23 @@ const BASE_REGISTRY: Readonly<Record<ThresholdProfile, ThresholdMap>> = {
 // ---------------------------------------------------------------------------
 const ENV_OVERRIDES: Partial<Record<EnvName, Partial<Record<ThresholdProfile, ThresholdMap>>>> = {
   staging: {
-    foundation:   { http_req_duration: [{ threshold: "p(95)<200", abortOnFail: false }] },
-    steady_load:  {
+    foundation: { http_req_duration: [{ threshold: "p(95)<200", abortOnFail: false }] },
+    steady_load: {
       http_req_duration: [
         { threshold: "p(95)<200", abortOnFail: false },
         { threshold: "p(99)<350", abortOnFail: false },
       ],
     },
     user_journey: {
-      [byEndpoint("login")]:     ["p(95)<150"],
+      [byEndpoint("login")]: ["p(95)<150"],
       [byEndpoint("inventory")]: ["p(95)<250"],
-      [byEndpoint("cart")]:      ["p(95)<250"],
-      [byEndpoint("checkout")]:  ["p(95)<200"],
+      [byEndpoint("cart")]: ["p(95)<250"],
+      [byEndpoint("checkout")]: ["p(95)<200"],
     },
   },
   prod: {
-    foundation:   { http_req_duration: [{ threshold: "p(95)<150", abortOnFail: true }] },
-    steady_load:  {
+    foundation: { http_req_duration: [{ threshold: "p(95)<150", abortOnFail: true }] },
+    steady_load: {
       http_req_duration: [
         { threshold: "p(95)<150", abortOnFail: true },
         { threshold: "p(99)<300", abortOnFail: true },
@@ -123,10 +119,10 @@ const ENV_OVERRIDES: Partial<Record<EnvName, Partial<Record<ThresholdProfile, Th
       http_req_failed: [{ threshold: "rate<0.001", abortOnFail: true, delayAbortEval: "30s" }],
     },
     user_journey: {
-      [byEndpoint("login")]:     ["p(95)<120"],
+      [byEndpoint("login")]: ["p(95)<120"],
       [byEndpoint("inventory")]: ["p(95)<180"],
-      [byEndpoint("cart")]:      ["p(95)<180"],
-      [byEndpoint("checkout")]:  ["p(95)<150"],
+      [byEndpoint("cart")]: ["p(95)<180"],
+      [byEndpoint("checkout")]: ["p(95)<150"],
     },
   },
 };

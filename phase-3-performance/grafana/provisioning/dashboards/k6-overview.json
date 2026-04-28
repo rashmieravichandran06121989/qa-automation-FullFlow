@@ -75,9 +75,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green",  "value": null },
+              { "color": "green", "value": null },
               { "color": "yellow", "value": 0.005 },
-              { "color": "red",    "value": 0.01  }
+              { "color": "red", "value": 0.01 }
             ]
           }
         }
