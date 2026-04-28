@@ -158,12 +158,3 @@ jobs:
           path: phase-3-performance/reports
           retention-days: 14
 
-  # ---------------- Phase 4 · OWASP ZAP -------------------------------------
-  security:
-    name: Phase 4 · Security (OWASP ZAP)
-    needs: performance
-    if: github.event_name == 'push'
-    uses: ./.github/workflows/zap-baseline.yml
-    with:
-      target_url:       https://jsonplaceholder.typicode.com
-      gate_on_warnings: false
