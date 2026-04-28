@@ -1,0 +1,23 @@
+{
+  "name": "@qa-architect/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cross-phase schema source of truth — Zod validators for the upstream APIs Phase 1 and Phase 3 share.",
+  "type": "module",
+  "exports": {
+    ".":           "./src/index.ts",
+    "./posts":     "./src/posts.ts",
+    "./users":     "./src/users.ts"
+  },
+  "scripts": {
+    "lint":      "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}

@@ -1,0 +1,63 @@
+# syntax=docker/dockerfile:1.7
+# Reference Dockerfile for a Playwright + Cucumber TS suite.
+# Copy this file into your Playwright repo (rename to plain `Dockerfile`),
+# adjust the COPY paths to match your tree (features/, steps/, pages/), and
+# wire it into the master pipeline as the `e2e` stage.
+#
+# Build:  docker build -t pw-suite:local -f Dockerfile.playwright .
+# Run:    docker run --rm -v "$PWD/reports:/work/reports" pw-suite:local
+#         (defaults to: npx cucumber-js)
+#
+# Multi-stage rationale:
+#   - Stage 1 (deps)  resolves dependencies once. Cached on package*.json hash.
+#   - Stage 2 (runner) carries only what's needed at test time.
+# The browser runtime is provided by the upstream `mcr.microsoft.com/playwright`
+# image so version drift between Playwright and the bundled browsers is impossible.
+
+ARG NODE_VERSION=20
+ARG PLAYWRIGHT_VERSION=1.46.0
+
+# ---- Stage 1: deps ---------------------------------------------------------
+FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-jammy AS deps
+
+WORKDIR /work
+
+# Copy lockfile + manifest first so the install layer caches independently
+# of source changes. `npm ci` is deterministic — fails on lockfile drift.
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+# ---- Stage 2: runner -------------------------------------------------------
+FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-jammy AS runner
+
+# Non-root user — the upstream image creates `pwuser` (uid 1000).
+WORKDIR /work
+COPY --from=deps --chown=pwuser:pwuser /work/node_modules ./node_modules
+
+# Source — adjust this list to match your tree.
+COPY --chown=pwuser:pwuser features/        ./features/
+COPY --chown=pwuser:pwuser steps/           ./steps/
+COPY --chown=pwuser:pwuser pages/           ./pages/
+COPY --chown=pwuser:pwuser playwright.config.ts cucumber.json tsconfig.json package.json ./
+
+# Reports directory owned by the runner so the suite can write to it.
+RUN mkdir -p /work/reports /work/test-results /work/playwright-report \
+ && chown -R pwuser:pwuser /work
+
+# Drop privileges. Browsers run unprivileged inside the upstream image.
+USER pwuser
+
+# Sensible defaults — override per stage in CI.
+ENV NODE_ENV=test \
+    BASE_URL=http://host.docker.internal:3000 \
+    HEADED=0 \
+    CI=true \
+    PWDEBUG=0
+
+# Healthcheck verifies the runner can list browsers (catches a broken install).
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=2 \
+  CMD npx playwright --version || exit 1
+
+# Default to running the BDD suite. Pipelines override CMD as needed:
+#   docker run --rm pw-suite:local npx playwright test
+CMD ["npx", "cucumber-js"]

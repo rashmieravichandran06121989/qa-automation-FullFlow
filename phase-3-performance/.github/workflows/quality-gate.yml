@@ -1,0 +1,265 @@
+name: Quality Gate
+
+# Full quality gate: lint → unit → contract → E2E → performance → security.
+# Stages cancel-in-progress on duplicate pushes to the same ref.
+# Fans out via reusable workflows so the master pipeline can compose this
+# with other repos (Phase 4 Days 41–42).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:
+    inputs:
+      target_env:
+        description: "k6_env to run perf against"
+        required: false
+        type: string
+        default: "sandbox"
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "k6_env to run perf against"
+        required: true
+        type: choice
+        options: [sandbox, dev, staging]
+        default: sandbox
+
+concurrency:
+  group: qg-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least-privilege default. Individual jobs widen as needed.
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "20"
+  K6_VERSION:   "0.54.0"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. lint  — ESLint + Prettier + tsc
+  # ---------------------------------------------------------------------------
+  lint:
+    name: 1 · Lint & Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run ci:verify
+
+  # ---------------------------------------------------------------------------
+  # 2. unit  — Jest/Vitest unit tests (placeholder if not present)
+  # ---------------------------------------------------------------------------
+  unit:
+    name: 2 · Unit Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Run unit tests
+        run: |
+          if npm run | grep -qE '^\s+test:unit\s'; then
+            npm run test:unit -- --reporters=default --reporters=jest-junit || \
+              npm run test:unit
+          else
+            echo "::notice::No test:unit script defined yet — skipping (add Jest/Vitest)."
+          fi
+      - name: Upload unit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-${{ github.run_id }}
+          path: |
+            junit.xml
+            coverage/
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # 3. contract  — schema / API contract checks
+  # ---------------------------------------------------------------------------
+  contract:
+    name: 3 · Contract
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Run contract suite
+        run: |
+          if npm run | grep -qE '^\s+test:contract\s'; then
+            npm run test:contract
+          else
+            echo "::notice::No test:contract script yet — skipping."
+            echo "::notice::Add Pact / Dredd / Schemathesis runner under test:contract."
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 4. e2e  — Playwright + Cucumber inside the pinned image
+  # ---------------------------------------------------------------------------
+  e2e:
+    name: 4 · E2E (Playwright)
+    needs: [unit, contract]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Run inside the Playwright image so browsers are pre-installed.
+    container:
+      image: mcr.microsoft.com/playwright:v1.46.0-jammy
+      options: --user 1000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Run Playwright suite
+        run: |
+          if [ -f playwright.config.ts ] || [ -f cucumber.json ]; then
+            npx cucumber-js || npx playwright test
+          else
+            echo "::notice::No Playwright config in this repo — running performance gate only."
+          fi
+      - name: Upload e2e results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # 5. performance  — k6 matrix (foundations / load / scenarios)
+  # ---------------------------------------------------------------------------
+  performance:
+    name: 5 · k6 · ${{ matrix.suite }}
+    needs: [unit, contract]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: foundations
+            script: tests/foundations/foundations-test.ts
+            gate: true
+          - suite: load
+            script: tests/load/load-test.ts
+            gate: true
+          - suite: scenarios
+            script: tests/scenarios/ecommerce-journey.ts
+            gate: true
+          - suite: stress
+            script: tests/stress/stress-test.ts
+            gate: false       # informational only — does not block
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install k6 (pinned)
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://github.com/grafana/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux-amd64.tar.gz" \
+            | sudo tar -xz --strip-components=1 -C /usr/local/bin "k6-v${K6_VERSION}-linux-amd64/k6"
+          k6 version
+      - name: Run ${{ matrix.suite }}
+        env:
+          K6_ENV: ${{ inputs.target_env || 'sandbox' }}
+        run: |
+          mkdir -p reports
+          # Stress is informational: never propagate a non-zero exit.
+          if [ "${{ matrix.gate }}" = "true" ]; then
+            k6 run --compatibility-mode=experimental_enhanced \
+              --out json=reports/${{ matrix.suite }}-raw.json \
+              ${{ matrix.script }}
+          else
+            k6 run --compatibility-mode=experimental_enhanced \
+              --out json=reports/${{ matrix.suite }}-raw.json \
+              ${{ matrix.script }} || echo "::warning::Stress informational run exited non-zero — review artefacts."
+          fi
+      - name: Upload perf artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-${{ matrix.suite }}-${{ github.run_id }}
+          path: reports/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # 6. security  — SAST + dependency + secret scan + container scan
+  # ---------------------------------------------------------------------------
+  security:
+    name: 6 · Security
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write    # for SARIF upload to Code Scanning
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy filesystem scan (vuln + secret + misconfig)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          format: sarif
+          output: trivy-results.sarif
+          exit-code: "0"        # don't fail the gate on scan warnings — reviewed via SARIF
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+      - name: Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}    # optional in OSS
+
+  # ---------------------------------------------------------------------------
+  # 7. summary  — single status check
+  # ---------------------------------------------------------------------------
+  summary:
+    name: ✅ Quality Gate Summary
+    if: always()
+    needs: [lint, unit, contract, e2e, performance, security]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print stage outcomes
+        run: |
+          echo "lint:        ${{ needs.lint.result }}"
+          echo "unit:        ${{ needs.unit.result }}"
+          echo "contract:    ${{ needs.contract.result }}"
+          echo "e2e:         ${{ needs.e2e.result }}"
+          echo "performance: ${{ needs.performance.result }}"
+          echo "security:    ${{ needs.security.result }}"
+      - name: Fail if any gating stage failed
+        if: |
+          needs.lint.result        == 'failure' ||
+          needs.unit.result        == 'failure' ||
+          needs.contract.result    == 'failure' ||
+          needs.e2e.result         == 'failure' ||
+          needs.performance.result == 'failure'
+        run: |
+          echo "::error::One or more gating stages failed."
+          exit 1

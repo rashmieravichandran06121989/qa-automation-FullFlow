@@ -1,0 +1,19 @@
+# ZAP baseline rules customisation.
+#
+# Format:    <rule_id>	<level>	<comment>
+# Levels:    IGNORE | WARN | FAIL
+# Reference: https://www.zaproxy.org/docs/alerts/
+#
+# Tab-separated. One rule per line. Trailing comment is for humans.
+# IGNORE = rule does not run; WARN = report but pass; FAIL = report and fail.
+#
+# Defaults are sensible. Add suppressions here only with a written reason —
+# silencing security findings without justification is the canonical anti-pattern.
+
+# --- Examples (commented out) ----------------------------------------------
+# 10038	IGNORE	(CSP) Public JSON API — CSP not applicable
+# 10020	WARN	(X-Frame-Options) Reverse-proxy adds it; suppress here, gate at CDN
+# 10202	WARN	(Absence of Anti-CSRF Tokens) Read-only API — no state-changing forms
+
+# --- Active suppressions ---------------------------------------------------
+# Currently none. Add with date + reviewer initials when you do.

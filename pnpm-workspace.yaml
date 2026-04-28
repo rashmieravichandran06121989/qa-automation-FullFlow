@@ -1,0 +1,16 @@
+# pnpm workspace for the portfolio. Lets `packages/contracts/` be consumed by
+# Phase 1 and Phase 3 without copy-paste, while each phase keeps its own
+# package.json and tooling.
+#
+# Bootstrapping:
+#   corepack enable
+#   pnpm install
+#
+# Phase 2 stays npm-managed (consumer / provider sub-packages have their own
+# lockfiles for Pact-broker compatibility checks). pnpm here is for the
+# TS-typed side of the portfolio only.
+
+packages:
+  - "packages/*"
+  - "phase-1-ai-testing"
+  - "phase-3-performance"

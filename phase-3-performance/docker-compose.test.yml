@@ -1,0 +1,49 @@
+# Compose overlay that wires the k6 runner image into the observability stack
+# defined in docker-compose.yml. Use it when you want a one-command end-to-end
+# run that streams metrics into the local Grafana.
+#
+# Run:
+#   docker compose -f docker-compose.yml -f docker-compose.test.yml \
+#     run --rm runner run tests/load/load-test.ts
+#
+# The runner is `restart: no` because it's a one-shot container — the
+# observability services keep running so you can inspect Grafana after the
+# run completes.
+
+name: k6-test-stack
+
+services:
+  runner:
+    image: k6-suite:local
+    build:
+      context: .
+      target: test
+    container_name: k6-runner
+    restart: "no"
+    environment:
+      K6_ENV: ${K6_ENV:-sandbox}
+      # Stream metrics into the InfluxDB service from docker-compose.yml.
+      K6_OUT: influxdb=http://influxdb:8086/k6
+      INFLUX_USER: ${INFLUX_USER:-k6writer}
+      INFLUX_USER_PASSWORD: ${INFLUX_USER_PASSWORD:?must be set in .env}
+      # Per-env URLs/tokens — only the active profile matters at run time.
+      DEV_BASE_URL: ${DEV_BASE_URL:-}
+      STAGING_BASE_URL: ${STAGING_BASE_URL:-}
+      PROD_BASE_URL: ${PROD_BASE_URL:-}
+      DEV_AUTH_TOKEN: ${DEV_AUTH_TOKEN:-}
+      STAGING_AUTH_TOKEN: ${STAGING_AUTH_TOKEN:-}
+      PROD_AUTH_TOKEN: ${PROD_AUTH_TOKEN:-}
+    volumes:
+      # Reports back out to the host so summary.json + junit.xml are visible.
+      - ./reports:/work/reports
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      grafana:
+        condition: service_healthy
+    networks:
+      - obs
+    # No ports — runner only needs outbound to influxdb.
+    # No healthcheck override — base image already declares one.
+
+# `obs` and the influxdb/grafana volumes are inherited from docker-compose.yml.

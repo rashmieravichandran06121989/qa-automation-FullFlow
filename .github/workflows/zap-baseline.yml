@@ -1,0 +1,127 @@
+name: ZAP Baseline Scan
+
+# OWASP ZAP baseline — passive checks only (no active payloads). Safe to run
+# against your own dev / staging targets. Never run against prod without
+# explicit authorisation.
+#
+# Three modes:
+#   - workflow_call:    invoked by master-pipeline.yml with target URL input
+#   - workflow_dispatch: manual one-off scan from the Actions tab
+#   - schedule:         weekly drift check against a fixed sandbox target
+#
+# Decoupled from the main quality gate because:
+#   1. Baseline takes ~5–10 min — too slow for every PR
+#   2. Target URL is environment-dependent
+#   3. Findings reach Code Scanning via SARIF — separate signal, separate cadence
+
+on:
+  workflow_call:
+    inputs:
+      target_url:
+        description: "URL to scan"
+        required: true
+        type: string
+      gate_on_warnings:
+        description: "Fail on WARN findings (false = report only)"
+        required: false
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "URL to scan"
+        required: true
+        type: string
+        default: "https://jsonplaceholder.typicode.com"
+      gate_on_warnings:
+        description: "Fail on WARN findings"
+        required: true
+        type: boolean
+        default: false
+  schedule:
+    # Weekly Monday 02:00 UTC — drift detection against the canonical sandbox.
+    # No `inputs` available on `schedule` events, so the job has its own
+    # default-resolution logic below.
+    - cron: "0 2 * * 1"
+
+permissions:
+  contents:        read
+  issues:          write     # ZAP action opens an issue on findings
+  security-events: write     # SARIF upload to Code Scanning
+  pull-requests:   write     # for sticky-PR comments on PRs
+
+concurrency:
+  group: zap-${{ github.ref }}
+  cancel-in-progress: false  # never abort an in-flight security scan
+
+jobs:
+  zap:
+    name: OWASP ZAP Baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      # Resolve the target URL across all three trigger types. `schedule` has
+      # no inputs, so we fall back to a hardcoded sandbox target. This closes
+      # the audit gap where scheduled runs would have exited with an
+      # "undefined target_url" error.
+      - name: Resolve scan parameters
+        id: cfg
+        run: |
+          TARGET="${{ inputs.target_url }}"
+          if [ -z "$TARGET" ]; then
+            TARGET="https://jsonplaceholder.typicode.com"
+          fi
+          GATE="${{ inputs.gate_on_warnings }}"
+          if [ -z "$GATE" ]; then
+            GATE="false"
+          fi
+          {
+            echo "target_url=$TARGET"
+            echo "gate_on_warnings=$GATE"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: ZAP Baseline Scan
+        id: zap
+        # `zaproxy/action-baseline` writes report_html.html, report_md.md,
+        # and report_json.json to the workspace and uploads them as an
+        # artifact. SARIF conversion is a separate step below.
+        uses: zaproxy/action-baseline@v0.13.0
+        with:
+          target: ${{ steps.cfg.outputs.target_url }}
+          rules_file_name: '.github/zap/rules.tsv'
+          # -a : include alpha passive rules (better coverage)
+          # -j : output JSON report alongside HTML/MD
+          # -m 5 : max pages to spider per minute (gentle on demo targets)
+          # -T 10 : 10-min spider time budget
+          cmd_options: '-a -j -m 5 -T 10'
+          fail_action: ${{ steps.cfg.outputs.gate_on_warnings }}
+          allow_issue_writing: true
+          artifact_name: zap-baseline-report
+
+      # Convert ZAP JSON to SARIF using the open-source converter. Audit found
+      # the previous step was a `echo` no-op — this replaces it with a real
+      # conversion that GitHub Code Scanning can consume.
+      - name: Convert ZAP JSON -> SARIF
+        if: always() && hashFiles('report_json.json') != ''
+        run: |
+          npx --yes @microsoft/sarif-multitool@4.5.4 convert \
+            report_json.json \
+            --tool ZapJson \
+            --output zap.sarif \
+            --pretty-print
+
+      - name: Upload SARIF to Code Scanning
+        if: always() && hashFiles('zap.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: zap.sarif
+          category:   zap-baseline
+
+      - name: Sticky PR comment with summary
+        if: always() && github.event_name == 'pull_request' && hashFiles('report_md.md') != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: zap-baseline
+          path:   report_md.md

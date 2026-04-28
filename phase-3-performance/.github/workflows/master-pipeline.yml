@@ -1,0 +1,147 @@
+name: Master Pipeline
+
+# Portfolio-grade orchestrator. Composes the full quality gate, the ZAP
+# baseline, and a tagged release in the right order with the right gates.
+# This is the workflow you point a recruiter at — it tells the whole story
+# of Phase 1 → Phase 4 in one place.
+#
+# Stages:
+#   1. quality-gate    — reusable workflow (lint → unit → contract → e2e → perf → security)
+#   2. zap-baseline    — only on push to main and when quality-gate passed
+#   3. release         — tag-only; builds + publishes the runner image
+#   4. notify          — final status summary
+
+on:
+  push:
+    branches: [main]
+    tags:    ['v*.*.*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "Environment for the perf gate"
+        required: true
+        type: choice
+        options: [sandbox, dev, staging]
+        default: sandbox
+      run_zap:
+        description: "Run ZAP baseline (off for quick PR checks)"
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: master-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents:        read
+  issues:          write
+  security-events: write
+  packages:        write    # for the release stage when publishing the image
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Quality Gate — calls the reusable workflow
+  # ---------------------------------------------------------------------------
+  quality-gate:
+    name: 1 · Quality Gate
+    uses: ./.github/workflows/quality-gate.yml
+    with:
+      target_env: ${{ github.event.inputs.target_env || 'sandbox' }}
+
+  # ---------------------------------------------------------------------------
+  # 2. ZAP Baseline — runs after quality-gate passes
+  # ---------------------------------------------------------------------------
+  zap:
+    name: 2 · ZAP Baseline
+    needs: quality-gate
+    if: |
+      success() && (
+        github.event_name == 'push' ||
+        github.event.inputs.run_zap == 'true'
+      )
+    uses: ./.github/workflows/zap-baseline.yml
+    with:
+      target_url: https://jsonplaceholder.typicode.com
+      gate_on_warnings: false
+
+  # ---------------------------------------------------------------------------
+  # 3. Release — only on tags. Build + push the runner image.
+  # ---------------------------------------------------------------------------
+  release:
+    name: 3 · Release runner image
+    needs: [quality-gate, zap]
+    if: startsWith(github.ref, 'refs/tags/v') && success()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents:  read
+      packages:  write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version
+        id: ver
+        run: echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push k6-suite image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          target: test
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/k6-suite:${{ steps.ver.outputs.tag }}
+            ghcr.io/${{ github.repository_owner }}/k6-suite:latest
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+          provenance: true              # SLSA provenance attestation
+          sbom:       true              # SPDX SBOM attestation
+
+  # ---------------------------------------------------------------------------
+  # 4. Final summary — single status check the branch protection points at
+  # ---------------------------------------------------------------------------
+  master-status:
+    name: 🟢 Master Pipeline Status
+    if: always()
+    needs: [quality-gate, zap, release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print outcomes
+        run: |
+          echo "quality-gate: ${{ needs.quality-gate.result }}"
+          echo "zap:          ${{ needs.zap.result }}"
+          echo "release:      ${{ needs.release.result }}"
+      - name: Decide
+        run: |
+          set -e
+          # Required: quality-gate must pass.
+          if [ "${{ needs.quality-gate.result }}" != "success" ]; then
+            echo "::error::Quality gate failed."
+            exit 1
+          fi
+          # ZAP is required when it actually ran (skipped is fine on PRs).
+          if [ "${{ needs.zap.result }}" = "failure" ]; then
+            echo "::error::ZAP baseline failed."
+            exit 1
+          fi
+          # Release only matters when invoked.
+          if [ "${{ needs.release.result }}" = "failure" ]; then
+            echo "::error::Release stage failed."
+            exit 1
+          fi
+          echo "✅ Master pipeline green."

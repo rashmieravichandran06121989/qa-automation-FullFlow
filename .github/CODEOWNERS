@@ -1,0 +1,33 @@
+# Templated for the org. Replace @<org>/quality-platform with real handles
+# during onboarding. CODEOWNERS is enforced by GitHub branch-protection rules.
+
+# CODEOWNERS — assigns review responsibility per area.
+# Lines are matched bottom-up; the LAST matching pattern wins. See
+# https://docs.github.com/en/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Replace @<org>/quality-platform with org / team handles when this lands in a
+# multi-engineer org (e.g. @org/quality-platform).
+
+# --- defaults --------------------------------------------------------------
+*                                       @<org>/quality-platform
+
+# --- per-phase ownership ---------------------------------------------------
+/phase-1-ai-testing/                    @<org>/quality-platform
+/phase-2-contract-testing/              @<org>/quality-platform
+/phase-3-performance/                   @<org>/quality-platform
+/phase-4-pipeline/                      @<org>/quality-platform
+
+# --- platform / CI -- changes here block a deploy, so review bar is higher --
+/.github/workflows/                     @<org>/quality-platform
+/.github/CODEOWNERS                     @<org>/quality-platform
+/docker-compose.yml                     @<org>/quality-platform
+/Dockerfile                             @<org>/quality-platform
+/phase-*/Dockerfile                     @<org>/quality-platform
+
+# --- security / supply chain ------------------------------------------------
+/.github/zap/                           @<org>/quality-platform
+/SECURITY.md                            @<org>/quality-platform
+
+# --- documentation ----------------------------------------------------------
+/docs/adr/                              @<org>/quality-platform
+/README.md                              @<org>/quality-platform

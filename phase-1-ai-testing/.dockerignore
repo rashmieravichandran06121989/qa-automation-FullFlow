@@ -1,0 +1,21 @@
+# Reduce build context — anything not required at runtime stays out of the image.
+node_modules/
+playwright-report/
+allure-report/
+allure-results/
+test-results/
+.git/
+.github/
+.vscode/
+.claude/
+.auth/
+docs/
+README.md
+Phase1-Study-Guide.md
+.env
+.env.example
+.eslintrc.cjs
+.prettierrc
+.prettierignore
+*.log
+.DS_Store

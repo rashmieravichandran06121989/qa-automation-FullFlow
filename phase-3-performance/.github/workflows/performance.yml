@@ -1,0 +1,69 @@
+name: k6 Performance Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: perf-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  perf:
+    name: k6 · ${{ matrix.suite }}
+    needs: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: foundations
+            script: tests/foundations/foundations-test.ts
+          - suite: load
+            script: tests/load/load-test.ts
+          - suite: scenarios
+            script: tests/scenarios/ecommerce-journey.ts
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          set -euo pipefail
+          K6_VERSION=0.54.0
+          curl -fsSL "https://github.com/grafana/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux-amd64.tar.gz" \
+            | sudo tar -xz --strip-components=1 -C /usr/local/bin "k6-v${K6_VERSION}-linux-amd64/k6"
+          k6 version
+
+      - name: Run ${{ matrix.suite }}
+        run: |
+          mkdir -p reports
+          k6 run --compatibility-mode=experimental_enhanced \
+            --out json=reports/${{ matrix.suite }}-raw.json \
+            ${{ matrix.script }}
+
+      - name: Upload artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-${{ matrix.suite }}-${{ github.run_id }}
+          path: reports/
+          retention-days: 30
+          if-no-files-found: warn
